@@ -52,3 +52,9 @@ Mkfile.old
 dkms.conf
 
 .DS_Store
+bin
+coverage-report
+coverage.info
+cpplint.log
+cppcheck.log
+valgrind.log
