@@ -81,14 +81,23 @@ Runs integration tests comparing the output of `s21_cat` against the system's `c
 ## Project Structure
 
 ```bash
-src/
-├── bin/               # Executable files (s21_cat, test)
-├── obj/               # Object files (.o)
+.
+├── bin/                   # Исполняемые файлы (s21_cat, тесты)
 ├── includes/
-│   └── main.h         # Header file with structure and function declarations
-├── *.c                # Source files
-├── Makefile           # Build script
-└── README.md          # Documentation
+│   └── main.h             # Заголовочный файл с объявлениями структур и функций
+├── obj/                   # Объектные файлы (.o)
+├── functions.c            # Исходный файл с реализацией функций
+├── main.c                 # Главный исходный файл
+├── Makefile               # Сценарий сборки
+├── README.md              # Документация
+├── .gitignore             # Файл игнорирования для git
+└── tests/
+    ├── check/
+    │   └── main.c         # Тесты на библиотеке check
+    └── scripts/
+        ├── create_test_files.sh
+        ├── diff_tests_cats.sh
+        └── run_tests.sh
 ```
 
 ---
