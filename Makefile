@@ -251,9 +251,9 @@ debug: dirs $(SOURCE_FILES) $(INCLUDE_FILES)
 	@echo ""
 
 
-format: $(SOURCE_FILES) $(INCLUDE_FILES)
+format: $(SOURCE_FILES) $(INCLUDE_FILES) $(TEST_SOURCE_FILES)
 	@echo "$(COLOR_YELLOW)Running clang-format...$(COLOR_RESET)"
-	@clang-format --style=Google -i $(SOURCE_FILES) $(INCLUDE_FILES)
+	@clang-format --style=Google -i $(SOURCE_FILES) $(INCLUDE_FILES) $(TEST_SOURCE_FILES)
 	@echo "$(COLOR_GREEN)Clang-format completed!$(COLOR_RESET)"
 	@echo ""
 
