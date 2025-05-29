@@ -63,7 +63,7 @@ Removes object files, executables, logs, and intermediate files.
 ### Run Tests
 
 ```bash
-make tests
+make check
 ```
 
 Runs integration tests comparing the output of `s21_cat` against the system's `cat` utility across all flag combinations and test files.
