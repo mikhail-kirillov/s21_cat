@@ -4,6 +4,12 @@ CC = gcc
 DEBUG_FLAGS = -g -O0
 CPPLINT_FLAGS = --extensions=c,h
 
+ifeq ($(shell uname), Darwin)
+	TEST_LIBS = -lcheck -lm
+else
+	TEST_LIBS = -lcheck -lsubunit -lm
+endif
+
 TESTING_FLAGS = -g \
                 -fsanitize=address \
                 -fsanitize=undefined \
@@ -132,15 +138,17 @@ BINARY_NAME = s21_cat
 TEST_DIRECTORY_NAME = tests
 OBJECT_DIRECTORY_NAME = obj
 BINARY_DIRECTORY_NAME = bin
+CCPLINT_LOG_FILE_NAME = cpplint.log
 TEST_FORWARD_FILE_NAME = forward.txt
+CPPCHECK_LOG_FILE_NAME = cppcheck.log
 VALGRIND_LOG_FILE_NAME = valgrind.log
 TEST_BINARY_NAME = test_$(BINARY_NAME)
 TEST_BACKWARD_FILE_NAME = backward.txt
 DEBUG_BINARY_NAME = debug_$(BINARY_NAME)
 COVERAGE_DIRECTORY_NAME = coverage-report
 COVERAGE_OUTPUT_FILE_NAME = coverage.info
-TEST_FILE_NAME_TO_RUN_TESTS_FORWARD = $(TEST_DIRECTORY_NAME)/$(TEST_FORWARD_FILE_NAME)
-TEST_FILE_NAME_TO_RUN_TESTS_BACKWARD = $(TEST_DIRECTORY_NAME)/$(TEST_BACKWARD_FILE_NAME)
+TEST_FILE_NAME_TO_RUN_TESTS_FORWARD = $(TEST_DIRECTORY_NAME)/scripts/$(TEST_FORWARD_FILE_NAME)
+TEST_FILE_NAME_TO_RUN_TESTS_BACKWARD = $(TEST_DIRECTORY_NAME)/scripts/$(TEST_BACKWARD_FILE_NAME)
 
 REMOVE_FILES_NAME_FOR_CLEAN = $(OBJECT_DIRECTORY_NAME) \
 							$(BINARY_DIRECTORY_NAME) \
@@ -152,7 +160,9 @@ REMOVE_FILES_NAME_FOR_CLEAN = $(OBJECT_DIRECTORY_NAME) \
 							*.gcov \
 							*.info \
 							$(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD) \
-							$(TEST_FILE_NAME_TO_RUN_TESTS_BACKWARD)
+							$(TEST_FILE_NAME_TO_RUN_TESTS_BACKWARD) \
+							$(CCPLINT_LOG_FILE_NAME) \
+							$(CPPCHECK_LOG_FILE_NAME) \
 
 # ============================ Names ============================ #
 
@@ -164,6 +174,7 @@ REMOVE_FILES_NAME_FOR_CLEAN = $(OBJECT_DIRECTORY_NAME) \
 
 SOURCE_FILES = $(wildcard *.c)
 INCLUDE_FILES = $(wildcard includes/*.h)
+TEST_SOURCE_FILES = $(wildcard $(TEST_DIRECTORY_NAME)/check/*.c)
 
 BINARY_FILE_PATH = $(BINARY_DIRECTORY_NAME)/$(BINARY_NAME)
 TEST_BINARY_PATH = $(BINARY_DIRECTORY_NAME)/$(TEST_BINARY_NAME)
@@ -249,31 +260,31 @@ format: $(SOURCE_FILES) $(INCLUDE_FILES)
 
 cpplint: $(SOURCE_FILES) $(INCLUDE_FILES)
 	@echo "$(COLOR_YELLOW)Running cpplint...$(COLOR_RESET)"
-	@cpplint $(CPPLINT_FLAGS) $(SOURCE_FILES) $(INCLUDE_FILES) || true
+	@cpplint $(CPPLINT_FLAGS) $(SOURCE_FILES) $(INCLUDE_FILES) > $(CCPLINT_LOG_FILE_NAME) 2>&1 || true
 	@echo "$(COLOR_GREEN)Cpplint completed!$(COLOR_RESET)"
 	@echo ""
 
 
 cppcheck: $(SOURCE_FILES) $(INCLUDE_FILES)
 	@echo "$(COLOR_YELLOW)Running cppcheck...$(COLOR_RESET)"
-	@cppcheck $(CPPCHECK_FLAGS) $(SOURCE_FILES) $(INCLUDE_FILES) || true
+	@cppcheck $(CPPCHECK_FLAGS) $(SOURCE_FILES) $(INCLUDE_FILES) > $(CPPCHECK_LOG_FILE_NAME) 2>&1 || true
 	@echo "$(COLOR_GREEN)Cppcheck completed!$(COLOR_RESET)"
 	@echo ""
 
 
-coverage: dirs $(SOURCE_FILES) $(INCLUDE_FILES) 
+coverage: dirs $(TEST_SOURCE_FILES) $(INCLUDE_FILES) $(SOURCE_FILES)
 	@echo "$(COLOR_YELLOW)Generating code coverage...$(COLOR_RESET)"
-	@cd $(TEST_DIRECTORY_NAME) && ./create_test_files.sh $(TEST_FORWARD_FILE_NAME) $(TEST_BACKWARD_FILE_NAME)
+	@cd $(TEST_DIRECTORY_NAME)/scripts && ./create_test_files.sh $(TEST_FORWARD_FILE_NAME) $(TEST_BACKWARD_FILE_NAME) > /dev/null 2>&1
 	@$(CC) $(COMPILING_FLAGS) $(TESTING_FLAGS) -fprofile-arcs -ftest-coverage -o $(TEST_BINARY_PATH) $(SOURCE_FILES)
-	@./$(TEST_BINARY_PATH) -bvnsteET $(TEST_FILE_NAME_TO_RUN_TESTS_BACKWARD) - < $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD)
-	@./$(TEST_BINARY_PATH) -bvnsteET $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD) - < $(TEST_FILE_NAME_TO_RUN_TESTS_BACKWARD)
-	@./$(TEST_BINARY_PATH) -bvnsteET Makefile - < $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD)
-	@./$(TEST_BINARY_PATH) -bvnsteET Makefile - < $(TEST_FILE_NAME_TO_RUN_TESTS_BACKWARD)
-	@./$(TEST_BINARY_PATH) -ERROR $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD) || true
-	@./$(TEST_BINARY_PATH) -n $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD)
-	@./$(TEST_BINARY_PATH) < $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD)
-	@lcov --capture --directory . --output-file $(COVERAGE_OUTPUT_FILE_NAME)
-	@genhtml $(COVERAGE_OUTPUT_FILE_NAME) --output-directory $(COVERAGE_DIRECTORY_NAME)
+	@./$(TEST_BINARY_PATH) -bvnsteET $(TEST_FILE_NAME_TO_RUN_TESTS_BACKWARD) - < $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD) > /dev/null 2>&1
+	@./$(TEST_BINARY_PATH) -bvnsteET $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD) - < $(TEST_FILE_NAME_TO_RUN_TESTS_BACKWARD) > /dev/null 2>&1
+	@./$(TEST_BINARY_PATH) -bvnsteET Makefile - < $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD) > /dev/null 2>&1
+	@./$(TEST_BINARY_PATH) -bvnsteET Makefile - < $(TEST_FILE_NAME_TO_RUN_TESTS_BACKWARD) > /dev/null 2>&1
+	@./$(TEST_BINARY_PATH) -ERROR $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD) > /dev/null 2>&1 || true
+	@./$(TEST_BINARY_PATH) -n $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD) > /dev/null 2>&1
+	@./$(TEST_BINARY_PATH) < $(TEST_FILE_NAME_TO_RUN_TESTS_FORWARD) > /dev/null 2>&1
+	@lcov --ignore-errors unsupported,unsupported --capture --directory . --output-file $(COVERAGE_OUTPUT_FILE_NAME) > /dev/null 2>&1
+	@genhtml $(COVERAGE_OUTPUT_FILE_NAME) --output-directory $(COVERAGE_DIRECTORY_NAME) > /dev/null 2>&1
 	@echo "$(COLOR_GREEN)Code coverage generated!$(COLOR_RESET)"
 	@echo ""
 
@@ -300,10 +311,23 @@ valgrind: debug
 	@echo ""
 
 
-check: bin
+check: bin $(TEST_SOURCE_FILES) $(INCLUDE_FILES) $(SOURCE_FILES)
 	@echo "$(COLOR_BLUE)Running tests...$(COLOR_RESET)"
-	@cd $(TEST_DIRECTORY_NAME) && ./run_tests.sh ../$(BINARY_FILE_PATH) $(TEST_FORWARD_FILE_NAME) $(TEST_BACKWARD_FILE_NAME)
+	@cd $(TEST_DIRECTORY_NAME)/scripts && ./run_tests.sh ../../$(BINARY_FILE_PATH) $(TEST_FORWARD_FILE_NAME) $(TEST_BACKWARD_FILE_NAME)
 	@echo "$(COLOR_GREEN)Tests completed!$(COLOR_RESET)"
+	@echo ""
+
+	@echo "$(COLOR_YELLOW)Run check lib tests? [Y/n] $(COLOR_RESET)"
+	@read choice; \
+	if [ "$$choice" = "y" ] || [ "$$choice" = "Y" ]; then \
+		echo "$(COLOR_YELLOW)Running check lib tests...$(COLOR_RESET)"; \
+		$(CC) $(TEST_SOURCE_FILES) $(filter-out main.c, $(SOURCE_FILES)) $(TEST_LIBS) -o $(TEST_BINARY_PATH) && \
+		./$(TEST_BINARY_PATH) 2>&1 | grep -E '^[0-9]+%: Checks:'; \
+		rm -rf $(TEST_BINARY_PATH) 2> /dev/null; \
+		echo "$(COLOR_GREEN)Check lib tests completed!$(COLOR_RESET)"; \
+	else \
+		echo "$(COLOR_RED)Skipping check lib tests...$(COLOR_RESET)"; \
+	fi
 	@echo ""
 
 
@@ -315,7 +339,7 @@ rebuild: clean all
 
 clean:
 	@echo "$(COLOR_RED)Cleaning...$(COLOR_RESET)"
-	@rm -rf $(REMOVE_FILES_NAME_FOR_CLEAN)
+	@rm -rf $(REMOVE_FILES_NAME_FOR_CLEAN) 2> /dev/null
 	@echo "$(COLOR_GREEN)Cleaning completed!$(COLOR_RESET)"
 	@echo ""
 

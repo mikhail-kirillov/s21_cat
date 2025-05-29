@@ -25,14 +25,9 @@ typedef enum ReturnCode {
   RETURN_CODE_ERROR_NF_FILE_OR_DIR,  // No such file or directory
 } ReturnCode;
 
-const char *kShortGetoptFlags = "bvnEsTte";  // Short flags
+extern const char *kShortGetoptFlags;  // Short flags
 // Long flags
-const struct option kLongGetoptFlags[] = {
-    {"number-nonblank", no_argument, 0, 'b'},
-    {"squeeze-blank", no_argument, 0, 's'},
-    {"number", no_argument, 0, 'n'},
-    {NULL, 0, 0, 0},
-};
+extern const struct option kLongGetoptFlags[];
 
 // Application name macros
 #define APP_NAME_MACRO "s21_cat"
