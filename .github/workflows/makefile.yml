@@ -23,7 +23,7 @@ jobs:
       run: make
 
     - name: Запуск s21_cat
-      run: ./s21_cat
+      run: ./bin/s21_cat
 
     - name: Запуск cpplint
       run: make cpplint
