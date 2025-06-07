@@ -16,22 +16,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Установка зависимостей
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y cppcheck cpplint valgrind
-
-    - name: Сборка s21_cat
+    - name: Build s21_cat
       run: make
 
-    - name: Запуск s21_cat
-      run: ./bin/s21_cat
-
-    - name: Запуск cpplint
-      run: make cpplint
-      
-    - name: Запуск cppcheck
-      run: make cppcheck
-
-    - name: Запуск valgrind
-      run: make valgrind
+    - name: Run tests
+      run: make check
