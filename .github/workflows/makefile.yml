@@ -19,14 +19,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y cppcheck cpplint valgrind
 
-    - name: Запуск s21_cat
-      run: ./s21_cat
-
     - name: Сборка s21_cat
       run: make
 
-    - name: Запуск форматирования
-      run: make format
+    - name: Запуск s21_cat
+      run: ./s21_cat
 
     - name: Запуск cpplint
       run: make cpplint
