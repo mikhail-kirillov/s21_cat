@@ -84,7 +84,7 @@ Runs integration tests comparing the output of `s21_cat` against the system's `c
 ├── README.md              # Документация
 ├── .gitignore             # Файл игнорирования для git
 └── tests/
-    ├── touch.sh
+    ├── touch.sh 
     ├── cmp.sh
     └── run.sh
 ```
