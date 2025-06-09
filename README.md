@@ -89,7 +89,7 @@ Runs integration tests comparing the output of `s21_cat` against the system's `c
     └── run.sh
 ```
 
----
+--- 
 
 ## Input Support
 
